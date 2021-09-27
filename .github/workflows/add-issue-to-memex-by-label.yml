@@ -8,10 +8,7 @@ jobs:
   sync:
     runs-on: ubuntu-latest
 
-    steps:
-    - name: Checkout vssaas-planning
-      uses: actions/checkout@master
-    
+    steps:    
     - uses: actions/checkout@master
       name: Checkout powershell tools
       with:
