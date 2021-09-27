@@ -1,0 +1,64 @@
+name: Add Issue to Memex by Label
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout vssaas-planning
+      uses: actions/checkout@master
+    
+    - uses: actions/checkout@master
+      name: Checkout powershell tools
+      with:
+        repository: cmbrose/github-projects-powershell
+        path: ./github-projects-powershell
+    
+    - uses: Amadevus/pwsh-script@v2
+      name: Run script
+      env:
+        PROJECTS_VNEXT_GRAPHQL_PAT: ${{ secrets.PROJECTS_VNEXT_GRAPHQL_PAT }}
+      with:
+        script: |
+          $labelToMemexIdMap = @{
+            "bug" = 123;
+            "todo" = 456;
+          }
+
+          cd ./github-projects-powershell
+                    
+          Import-Module .\common\client.psm1
+          Import-Module .\types\project-vnext.psm1
+          
+          $client = New-GraphQLClient -token $env:PROJECTS_VNEXT_GRAPHQL_PAT
+          
+          $org, $repo = $github.event.repository.full_name.split("/")
+          $issueNumber = $github.event.issue.number
+          $issueId = $github.event.issue.node_id
+          $label = $github.event.label.name
+
+          $targetProject = $labelToMemexIdMap[$label]
+          if (-not $targetProject) {
+            Write-ActionInfo "Label '$label' did not have a target project, nothing to do"
+            return
+          }
+          
+          $proj = Get-Project -org $org -projectNumber $targetProject -client $client
+          
+          Write-ActionInfo "Loaded project #$targetProject"
+          
+          $item = $proj.Items | where { $_.content.id -eq $issueId }
+          if (-not $item) {
+            Write-ActionInfo "Adding issue #$issueNumber to the project"
+            $item = $proj.AddItemByContentId($issueId)
+          } else {
+            Write-ActionInfo "Issue #$issueNumber is already on the project"
+          }
+
+          # Can edit $item here to set fields...
+          
+          Write-ActionInfo "Complete"
