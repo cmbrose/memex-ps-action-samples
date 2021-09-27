@@ -33,10 +33,7 @@ jobs:
           
           $client = New-GraphQLClient -token $env:PROJECTS_VNEXT_GRAPHQL_PAT
           
-          #$org, $repo = $github.event.repository.full_name.split("/")
-          
-          $org = "microsoft"
-          
+          $org, $repo = $github.event.repository.full_name.split("/")   
           $issueNumber = $github.event.issue.number
           $issueId = $github.event.issue.node_id
           $label = $github.event.label.name
