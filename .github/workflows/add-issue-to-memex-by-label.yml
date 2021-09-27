@@ -25,8 +25,8 @@ jobs:
       with:
         script: |
           $labelToMemexIdMap = @{
-            "bug" = 123;
-            "todo" = 456;
+            "bug" = 111;
+            "todo" = 222;
           }
 
           cd ./github-projects-powershell
@@ -36,7 +36,10 @@ jobs:
           
           $client = New-GraphQLClient -token $env:PROJECTS_VNEXT_GRAPHQL_PAT
           
-          $org, $repo = $github.event.repository.full_name.split("/")
+          #$org, $repo = $github.event.repository.full_name.split("/")
+          
+          $org = "microsoft"
+          
           $issueNumber = $github.event.issue.number
           $issueId = $github.event.issue.node_id
           $label = $github.event.label.name
