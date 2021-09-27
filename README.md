@@ -8,4 +8,6 @@ Note: all actions use the `PROJECTS_VNEXT_GRAPHQL_PAT` secret as the PAT for edi
 
 ### Add issue to memex by label
 
+[Source](https://github.com/cmbrose/memex-ps-action-samples/blob/main/.github/workflows/add-issue-to-memex-by-label.yml)
+
 Adds an issue to memex when it is given a certain label. Labels are configured by the `labelToMemexIdMap` map at the top of the main script. If the label doesn't match, the action will do nothing.
