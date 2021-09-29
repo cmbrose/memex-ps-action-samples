@@ -1,0 +1,49 @@
+name: Set Triaged Items to In Progress
+
+on:
+  schedule:
+  - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:    
+    - uses: actions/checkout@master
+      name: Checkout powershell tools
+      with:
+        repository: cmbrose/github-projects-powershell
+        path: ./github-projects-powershell
+    
+    - uses: Amadevus/pwsh-script@v2
+      name: Run script
+      env:
+        PROJECTS_VNEXT_GRAPHQL_PAT: ${{ secrets.PROJECTS_VNEXT_GRAPHQL_PAT }}
+      with:
+        script: |
+          cd ./github-projects-powershell
+          
+          Import-Module .\common\client.psm1
+          Import-Module .\types\project-vnext.psm1
+                    
+          $org = "${{ github.repository_owner }}"
+          $projectNumber = 1234
+          
+          $client = New-GraphQLClient -token $env:PROJECTS_VNEXT_GRAPHQL_PAT
+          
+          $project = Get-Project -org $org -projectNumber $projectNumber -client $client
+
+          $newlyTriagedItems = $project.items 
+          | where { -not $_.content.closed } 
+          | where { $_.GetFieldValue("Status") -eq "Triage" } 
+          | where { -not $_.HasValueForField("Visibility") } 
+          | where { -not $_.HasValueForField("Impact") } 
+          | where { -not $_.HasValueForField("Effort") }
+
+          $newlyTriagedItems | % {
+            Write-ActionInfo "Moving $($content.repository) #$($content.number) from Triage to In Progess"
+            $_.TrySetFieldValue("Status", "In Progress")
+          }
+          
+          Write-ActionInfo "Complete"
